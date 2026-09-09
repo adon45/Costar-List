@@ -6,14 +6,14 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color background = Color(0xFFE5E5E5);
-  static const Color primary = Color(0xFF1E3A6F);
-  static const Color accent = Color(0xFFF78210);
+  static const Color background = Color(0xFFF3F6F8);
+  static const Color primary = Color(0xFF17324D);
+  static const Color accent = Color(0xFFE8752A);
 
   static const Color primaryText = Color(0xFF1A1A1A);
   static const Color mutedText = Color(0xFF6B6B6B);
   static const Color cardBackground = Colors.white;
-  static const Color divider = Color(0xFFD0D0D0);
+  static const Color divider = Color(0xFFD8E0E6);
 }
 
 class AppTheme {
@@ -45,6 +45,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
         iconTheme: IconThemeData(color: Colors.white),
+        surfaceTintColor: Colors.transparent,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -83,7 +84,11 @@ class AppTheme {
       dividerTheme: const DividerThemeData(color: AppColors.divider),
       cardTheme: const CardThemeData(
         color: AppColors.cardBackground,
-        elevation: 1,
+        elevation: 0,
+        shadowColor: Color(0x1A17324D),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
         margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
       iconTheme: const IconThemeData(color: AppColors.primary),

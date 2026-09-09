@@ -22,7 +22,7 @@ class CounterWidget extends StatelessWidget {
         color: isComplete
             ? AppColors.accent
             : Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
       ),
       child: Text(

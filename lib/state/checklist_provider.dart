@@ -35,9 +35,8 @@ class ChecklistProvider extends ChangeNotifier {
   MediaType? get mediaType => _mediaType;
   String? get subtype => _subtype;
 
-  int get captured => mainList
-      .where((d) => !d.isAlternativeTile && d.isCompleted)
-      .length;
+  int get captured =>
+      mainList.where((d) => !d.isAlternativeTile && d.isCompleted).length;
   int get totalNeeded => _defs.where((def) {
         final state = _stateFor(def.id);
         return !def.isToggleable || state.isAvailable;
@@ -86,7 +85,8 @@ class ChecklistProvider extends ChangeNotifier {
       try {
         final decoded = jsonDecode(raw) as Map<String, dynamic>;
         decoded.forEach((id, value) {
-          _states[id] = DeliverableState.fromJson(value as Map<String, dynamic>);
+          _states[id] =
+              DeliverableState.fromJson(value as Map<String, dynamic>);
         });
       } catch (_) {
         // Corrupt data for this assignment; start fresh.
