@@ -35,12 +35,8 @@ class ChecklistProvider extends ChangeNotifier {
   MediaType? get mediaType => _mediaType;
   String? get subtype => _subtype;
 
-  int get captured =>
-      mainList.where((d) => !d.isAlternativeTile && d.isCompleted).length;
-  int get totalNeeded => _defs.where((def) {
-        final state = _stateFor(def.id);
-        return !def.isToggleable || state.isAvailable;
-      }).length;
+  int get captured => mainList.where((d) => d.isCompleted).length;
+  int get totalNeeded => mainList.length;
 
   /// Call once at app start. Loads shared preferences and, if a previous
   /// assignment was open, restores it. Returns true if an assignment was

@@ -1,15 +1,12 @@
 import '../models/deliverable.dart';
 import '../models/media_type.dart';
 
-/// Returns the ordered list of deliverable definitions for a given
-/// [MediaType] and optional [subtype]. Returns an empty list for any
-/// "Coming Soon" media type, since it has no defined checklist yet.
 List<DeliverableDef> getChecklist(MediaType type, String? subtype) {
   switch (type) {
     case MediaType.photoAssignments:
       return _photoAssignments(subtype);
     case MediaType.homesPlatinum:
-      return _homesPlatinum();
+      return _homesPlatinum(subtype);
     case MediaType.statusVerifications:
       return _statusVerifications(subtype);
     case MediaType.apartmentsGold:
@@ -20,323 +17,130 @@ List<DeliverableDef> getChecklist(MediaType type, String? subtype) {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Photo Assignments
-// ---------------------------------------------------------------------------
-
 List<DeliverableDef> _photoAssignments(String? subtype) {
   switch (subtype) {
     case 'Industrial':
-      return _photoCommonMandatory() + _industrialOptional();
+      return [
+        _required('primary_image', 'Primary Image'),
+        _required('alternates', 'Alternate(s)'),
+        _required('signage', 'Signage', 'Property or monument signage.'),
+        _required('loading', 'Loading Ramps / Loading Docks / Drive-in Bays',
+            'Show loading ramps, loading docks, and drive-in bays.'),
+        _required('loading_perspective', 'One-point perspective of loading side',
+            'Use a one-point perspective looking along the loading side.'),
+        _required('garages', 'Garages'),
+        _required('entrance', 'Entrance'),
+        _optional('lobby', 'Lobby (when present)'),
+        _required('aerial', 'Aerial Context',
+            'Show the property in its surrounding context.'),
+        _required('lookdown', '90° Look Down',
+            'Capture a straight-down 90 degree view of the property.'),
+      ];
     case 'Office':
-      return _photoCommonMandatory() + _officeOptional();
+      return [
+        _required('primary_image', 'Primary Image'),
+        _required('alternates', 'Alternate Building Images'),
+        _required('signage', 'Signage'),
+        _required('loading', 'Loading Ramps / Docks / Drive-in Bays',
+            'Show loading ramps, loading docks, and drive-in bays.'),
+        _required('garages', 'Garages'),
+        _required('entrance', 'Entrance'),
+        _optional('lobby', 'Lobby (when possible)'),
+        _required('aerial', 'Aerial Context',
+            'Show the property in its surrounding context.'),
+        _required('lookdown', '90° Look Down',
+            'Capture a straight-down 90 degree view of the property.'),
+      ];
     case 'Retail':
-      return _retailMandatory() + _retailOptional();
+      return [
+        _required('primary_image', 'Primary Image'),
+        _required('alternates', 'Alternate Building Images'),
+        _required('signage', 'Signage', 'Show storefront or monument signage.'),
+        _required('loading', 'Loading Ramps / Docks / Drive-in Bays',
+            'Show loading ramps, loading docks, and drive-in bays.'),
+        _required('garages', 'Garages'),
+        _optional('anchor_store', 'Anchor Store (if not in primary)'),
+        _required('aerial', 'Aerial Context',
+            'Show the property in its surrounding context.'),
+        _required('lookdown', '90° Look Down',
+            'Capture a straight-down 90 degree view of the property.'),
+      ];
     case 'Multifamily':
-      return _multifamilyMandatory() + _multifamilyOptional();
+      return [
+        _required('primary_image', 'Primary Image'),
+        _required('alternates', 'Alternate Community Images'),
+        _optional('clubhouse', 'Clubhouse (if available)'),
+        _optional('amenities', 'Amenities Overview (if available)'),
+        _required('main_tower_entrance', 'Entrance of main tower'),
+        _optional('lobby', 'Lobby (when accessible)'),
+        _required('aerial', 'Aerial Context',
+            'Show the property in its surrounding context.'),
+        _required('lookdown', '90° Look Down',
+            'Capture a straight-down 90 degree view of the property.'),
+      ];
     default:
       return const [];
   }
 }
 
-List<DeliverableDef> _photoCommonMandatory() => const [
-      DeliverableDef(
-        id: 'primary',
-        name: 'Primary',
-        description: 'The main hero shot representing the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'alternate',
-        name: 'Alternate',
-        description: 'A secondary angle of the primary subject.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'aerial_context',
-        name: 'Aerial Context',
-        description: 'Drone shot showing the property in its surroundings.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'lookdown_90',
-        name: '90° Lookdown',
-        description: 'Straight-down drone shot directly over the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'entrance_photo',
-        name: 'Entrance Photo',
-        description: 'Clear shot of the main entrance / front door area.',
-        isMandatory: true,
-      ),
-    ];
+DeliverableDef _required(String id, String name, [String description = '']) =>
+    DeliverableDef(
+      id: id,
+      name: name,
+      description: description,
+      isMandatory: true,
+    );
 
-List<DeliverableDef> _photoCommonOptional() => const [
-      DeliverableDef(
-        id: 'alternate_2',
-        name: 'Alternate 2',
-        description: 'Additional alternate angle of the property.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate_3',
-        name: 'Alternate 3',
-        description: 'A further alternate angle, if available.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'loading_ramps',
-        name: 'Loading Ramps',
-        description: 'Shot of loading ramp access points.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'loading_docks',
-        name: 'Loading Docks',
-        description: 'Shot of loading dock doors and staging area.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'drive_in_bays',
-        name: 'Drive-in Bays',
-        description: 'Shot of grade-level drive-in bay doors.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'garages',
-        name: 'Garages',
-        description: 'Shot of attached or detached garage structures.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
+DeliverableDef _optional(String id, String name, [String description = '']) =>
+    DeliverableDef(
+      id: id,
+      name: name,
+      description: description,
+      isMandatory: false,
+      isToggleable: true,
+      hasAlternative: true,
+    );
 
-List<DeliverableDef> _industrialOptional() => [
-      ..._photoCommonOptional(),
-      const DeliverableDef(
-        id: 'lobby',
-        name: 'Lobby',
-        description: 'Interior shot of the building lobby.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
-
-List<DeliverableDef> _officeOptional() => _industrialOptional();
-
-List<DeliverableDef> _retailMandatory() => const [
-      DeliverableDef(
-        id: 'primary',
-        name: 'Primary',
-        description: 'The main hero shot representing the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'alternate',
-        name: 'Alternate',
-        description: 'A secondary angle of the primary subject.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'aerial_context',
-        name: 'Aerial Context',
-        description: 'Drone shot showing the property in its surroundings.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'lookdown_90',
-        name: '90° Lookdown',
-        description: 'Straight-down drone shot directly over the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'signage',
-        name: 'Signage',
-        description: 'Clear shot of storefront / monument signage.',
-        isMandatory: true,
-      ),
-    ];
-
-List<DeliverableDef> _retailOptional() => const [
-      DeliverableDef(
-        id: 'alternate_2',
-        name: 'Alternate 2',
-        description: 'Additional alternate angle of the property.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate_3',
-        name: 'Alternate 3',
-        description: 'A further alternate angle, if available.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'loading_ramps',
-        name: 'Loading Ramps',
-        description: 'Shot of loading ramp access points.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'loading_docks',
-        name: 'Loading Docks',
-        description: 'Shot of loading dock doors and staging area.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'drive_in_bays',
-        name: 'Drive-in Bays',
-        description: 'Shot of grade-level drive-in bay doors.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'garages',
-        name: 'Garages',
-        description: 'Shot of attached or detached garage structures.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
-
-List<DeliverableDef> _multifamilyMandatory() => const [
-      DeliverableDef(
-        id: 'primary',
-        name: 'Primary',
-        description: 'The main hero shot representing the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'alternate',
-        name: 'Alternate',
-        description: 'A secondary angle of the primary subject.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'aerial_context',
-        name: 'Aerial Context',
-        description: 'Drone shot showing the property in its surroundings.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'lookdown_90',
-        name: '90° Lookdown',
-        description: 'Straight-down drone shot directly over the property.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'community_building_alternate',
-        name: 'Community/Building Alternate',
-        description: 'Alternate angle of a community building.',
-        isMandatory: true,
-      ),
-      DeliverableDef(
-        id: 'main_tower_entrance',
-        name: 'Main Tower/Entrance',
-        description: 'Shot of the main tower or community entrance.',
-        isMandatory: true,
-      ),
-    ];
-
-List<DeliverableDef> _multifamilyOptional() => const [
-      DeliverableDef(
-        id: 'alternate_2',
-        name: 'Alternate 2',
-        description: 'Additional alternate angle of the property.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate_3',
-        name: 'Alternate 3',
-        description: 'A further alternate angle, if available.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'lobby',
-        name: 'Lobby',
-        description: 'Interior shot of the building lobby.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'amenities_overview',
-        name: 'Amenities Overview',
-        description: 'Wide shot showing the amenity spaces.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'clubhouse',
-        name: 'Clubhouse',
-        description: 'Shot of the community clubhouse.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
-
-// ---------------------------------------------------------------------------
-// Homes Platinum Shoot -- 20 toggleable mandatory deliverables
-// ---------------------------------------------------------------------------
-
-List<DeliverableDef> _homesPlatinum() {
-  const names = [
+List<DeliverableDef> _homesPlatinum(String? subtype) {
+  const baseNames = [
     'Front Exterior',
     'Rear Exterior',
-    'Patio/Deck',
+    'Patio / Deck',
+    'Aerial',
     'Entry',
     'Living Room',
-    'Living Room (2)',
     'Dining Room',
-    'Kitchen',
-    'Kitchen (2)',
-    'Primary BR',
-    'Primary BR (2)',
-    'Primary BA',
-    'Bedroom 2',
-    'Bedroom 3',
-    'Bathroom 2',
-    'Bathroom 3',
     'Family Room',
-    'Laundry Room',
-    'Garage Interior',
-    'Twilight Exterior',
+    'Kitchen',
+    'Bathroom(s)',
+    'Primary Bedroom',
+    'Primary Bathroom',
+    'Second Bedroom',
+    'Third Bedroom',
   ];
-
+  final alternateCount = switch (subtype) {
+    '2,500–6,000 sqft' => 4,
+    '6,000+ sqft' => 7,
+    _ => 3,
+  };
+  final total = switch (subtype) {
+    '2,500–6,000 sqft' => 30,
+    '6,000+ sqft' => 35,
+    _ => 20,
+  };
+  final names = <String>[
+    ...baseNames,
+    for (var index = 1; index <= alternateCount; index++) 'Alternate $index',
+  ];
+  for (var index = names.length + 1; index <= total; index++) {
+    names.add('Additional Photo ${index - baseNames.length - alternateCount}');
+  }
   return names
       .map(
         (name) => DeliverableDef(
           id: _slug(name),
           name: name,
-          description: 'Capture $name per the Homes Platinum shot list.',
+          description: '',
           isMandatory: true,
           isToggleable: true,
           hasAlternative: true,
@@ -350,97 +154,38 @@ String _slug(String name) => name
     .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
     .replaceAll(RegExp(r'^_+|_+$'), '');
 
-// ---------------------------------------------------------------------------
-// Status Verifications
-// ---------------------------------------------------------------------------
-
 List<DeliverableDef> _statusVerifications(String? subtype) {
   switch (subtype) {
     case 'Proposed':
     case 'Final Planning':
     case 'Under Construction':
-      return _statusSimple();
+      return [
+        _status('construction_signage', 'Construction Signage',
+            'Show the construction or development signage.'),
+        _status('primary_construction', 'Primary Construction Photo'),
+        _status('alternate_construction', 'Alternate Construction Photo',
+            'Usually capture an Aerial Context view.'),
+      ];
     case 'Existing':
-      return _statusExisting();
+      return [
+        _status('primary_image', 'Primary Image'),
+        _status('alternates', '1–3 Alternates'),
+        _status('entrance', 'Entrance'),
+        _status('lobby', 'Lobby (when possible)'),
+        _status('aerial_context', 'Aerial / Context',
+            'Show the property and its surrounding context.'),
+      ];
     default:
       return const [];
   }
 }
 
-List<DeliverableDef> _statusSimple() => const [
-      DeliverableDef(
-        id: 'construction_signage',
-        name: 'Construction Signage',
-        description: 'Shot of on-site construction/development signage.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'primary',
-        name: 'Primary',
-        description: 'The main hero shot representing the site status.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternative_shot',
-        name: 'Alternative',
-        description: 'Secondary status shot from a different angle.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
-
-List<DeliverableDef> _statusExisting() => const [
-      DeliverableDef(
-        id: 'primary',
-        name: 'Primary',
-        description: 'The main hero shot representing the property.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate',
-        name: 'Alternate',
-        description: 'A secondary angle of the primary subject.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'entrance',
-        name: 'Entrance',
-        description: 'Clear shot of the main entrance.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'aerial',
-        name: 'Aerial',
-        description: 'Drone shot showing the property from above.',
-        isMandatory: true,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate_2',
-        name: 'Alternate 2',
-        description: 'Additional alternate angle of the property.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-      DeliverableDef(
-        id: 'alternate_3',
-        name: 'Alternate 3',
-        description: 'A further alternate angle, if available.',
-        isMandatory: false,
-        isToggleable: true,
-        hasAlternative: true,
-      ),
-    ];
+DeliverableDef _status(String id, String name, [String description = '']) =>
+    DeliverableDef(
+      id: id,
+      name: name,
+      description: description,
+      isMandatory: true,
+      isToggleable: true,
+      hasAlternative: true,
+    );

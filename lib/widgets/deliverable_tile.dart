@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 ///  - a completion checkbox on the left,
 ///  - the name + a "More Info" (+) expander in the middle,
 ///  - an availability switch on the right (when applicable),
-///  - an animated expanding panel with description + example image.
+///  - an animated expanding panel with descriptive guidance.
 class DeliverableTile extends StatelessWidget {
   final DeliverableItem item;
   final VoidCallback onToggleCompleted;
@@ -82,14 +82,15 @@ class DeliverableTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: 'More Info',
-                  icon: Icon(
-                    item.isExpanded ? Icons.remove_circle : Icons.add_circle,
-                    color: AppColors.primary,
+                if (item.hasMoreInfo)
+                  IconButton(
+                    tooltip: 'More Info',
+                    icon: Icon(
+                      item.isExpanded ? Icons.remove_circle : Icons.add_circle,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: onToggleExpanded,
                   ),
-                  onPressed: onToggleExpanded,
-                ),
                 if (onToggleAvailability != null)
                   Switch(
                     value: item.isAvailable,
@@ -120,47 +121,6 @@ class DeliverableTile extends StatelessWidget {
           Text(
             item.description,
             style: const TextStyle(fontSize: 13.5, color: AppColors.mutedText),
-          ),
-          if (item.exampleImage != null) ...[
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.asset(
-                  item.exampleImage!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _imagePlaceholder(),
-                ),
-              ),
-            ),
-          ] else ...[
-            const SizedBox(height: 10),
-            _imagePlaceholder(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _imagePlaceholder() {
-    return Container(
-      height: 100,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.divider),
-      ),
-      alignment: Alignment.center,
-      child: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.image_outlined, color: AppColors.mutedText),
-          SizedBox(height: 4),
-          Text(
-            'Example photo placeholder',
-            style: TextStyle(fontSize: 11.5, color: AppColors.mutedText),
           ),
         ],
       ),

@@ -28,8 +28,7 @@ class DeliverableDef {
     this.isToggleable = false,
     this.hasAlternative = false,
     this.alternativeName = 'Alternative',
-    this.alternativeDescription =
-        'Capture a suitable replacement shot for this deliverable.',
+    this.alternativeDescription = '',
   });
 }
 
@@ -78,6 +77,8 @@ class DeliverableItem {
   bool isCompleted;
   bool isAvailable;
   bool isExpanded;
+
+  bool get hasMoreInfo => description.trim().isNotEmpty;
 
   DeliverableItem({
     required this.id,
