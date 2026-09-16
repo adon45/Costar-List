@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'screens/checklist_screen.dart';
 import 'screens/media_types_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'state/checklist_provider.dart';
 import 'theme/app_theme.dart';
 
@@ -21,7 +22,13 @@ class MediaChecklistApp extends StatelessWidget {
         title: 'Media Checklist',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
-        home: const _StartupGate(),
+        home: WelcomeScreen(
+          onContinue: (context) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const _StartupGate()),
+            );
+          },
+        ),
       ),
     );
   }

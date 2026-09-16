@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:media_checklist/data/checklist_data.dart';
+import 'package:media_checklist/main.dart';
 import 'package:media_checklist/models/media_type.dart';
 import 'package:media_checklist/screens/media_types_screen.dart';
 import 'package:media_checklist/state/checklist_provider.dart';
 import 'package:media_checklist/theme/app_theme.dart';
 
 void main() {
+  testWidgets('app opens on the welcome screen and continues to media types',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await tester.pumpWidget(const MediaChecklistApp());
+
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.text('Continue'), findsOneWidget);
+
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Media Types'), findsOneWidget);
+  });
+
   test('Homes Platinum lists rooms and 25 flexible shots', () {
     const subtypes = ['1–2,500 sqft', '2,500–6,000 sqft', '6,000+ sqft'];
     const roomNames = [
