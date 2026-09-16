@@ -103,6 +103,7 @@ class ChecklistProvider extends ChangeNotifier {
   void _rebuildLists() {
     final main = <DeliverableItem>[];
     final unavailable = <DeliverableItem>[];
+    final homesPlatinumDetailReplacements = <DeliverableItem>[];
 
     for (final def in _defs) {
       final state = _stateFor(def.id);
@@ -115,14 +116,35 @@ class ChecklistProvider extends ChangeNotifier {
           final altState = _stateFor(altId);
           main.add(DeliverableItem.alternative(def, altState));
         }
+        if (_isHomesPlatinum && !def.name.startsWith('Detail Shot')) {
+          final replacementId = 'detail_shot_replacement_${def.id}';
+          final replacementState = _stateFor(replacementId);
+          homesPlatinumDetailReplacements.add(
+            DeliverableItem(
+              id: replacementId,
+              name: 'Detail Shot (${def.name})',
+              description: '',
+              isMandatory: false,
+              isToggleable: false,
+              isAlternativeTile: false,
+              isCompleted: replacementState.isCompleted,
+              isAvailable: replacementState.isAvailable,
+              isExpanded: replacementState.isExpanded,
+            ),
+          );
+        }
       } else {
         main.add(DeliverableItem.original(def, state));
       }
     }
 
+    main.addAll(homesPlatinumDetailReplacements);
+
     mainList = main;
     unavailableList = unavailable;
   }
+
+  bool get _isHomesPlatinum => _mediaType == MediaType.homesPlatinum;
 
   /// Toggles the completion checkbox for any item id (original or
   /// alternative tile).

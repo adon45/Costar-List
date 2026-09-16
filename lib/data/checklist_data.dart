@@ -24,11 +24,10 @@ List<DeliverableDef> _photoAssignments(String? subtype) {
         _required('primary_image', 'Primary Image'),
         _required('alternates', 'Alternate(s)'),
         _required('signage', 'Signage', 'Property or monument signage.'),
-        _required('loading', 'Loading Ramps / Loading Docks / Drive-in Bays',
-            'Show loading ramps, loading docks, and drive-in bays.'),
-        _required('loading_perspective', 'One-point perspective of loading side',
+        _required(
+            'loading_perspective',
+            'One-point perspective of loading side',
             'Use a one-point perspective looking along the loading side.'),
-        _required('garages', 'Garages'),
         _required('entrance', 'Entrance'),
         _optional('lobby', 'Lobby (when present)'),
         _required('aerial', 'Aerial Context',
@@ -88,7 +87,8 @@ DeliverableDef _required(String id, String name, [String description = '']) =>
       id: id,
       name: name,
       description: description,
-      isMandatory: true,
+      isMandatory: false,
+      isToggleable: true,
     );
 
 DeliverableDef _optional(String id, String name, [String description = '']) =>
@@ -98,7 +98,6 @@ DeliverableDef _optional(String id, String name, [String description = '']) =>
       description: description,
       isMandatory: false,
       isToggleable: true,
-      hasAlternative: true,
     );
 
 List<DeliverableDef> _homesPlatinum(String? subtype) {
@@ -118,35 +117,23 @@ List<DeliverableDef> _homesPlatinum(String? subtype) {
     'Second Bedroom',
     'Third Bedroom',
   ];
-  final alternateCount = switch (subtype) {
-    '2,500–6,000 sqft' => 4,
-    '6,000+ sqft' => 7,
-    _ => 3,
-  };
-  final total = switch (subtype) {
-    '2,500–6,000 sqft' => 30,
-    '6,000+ sqft' => 35,
-    _ => 20,
-  };
+  const detailShotCount = 11;
   final names = <String>[
     ...baseNames,
-    for (var index = 1; index <= alternateCount; index++) 'Alternate $index',
+    for (var index = 1; index <= detailShotCount; index++) 'Detail Shot $index',
   ];
-  for (var index = names.length + 1; index <= total; index++) {
-    names.add('Additional Photo ${index - baseNames.length - alternateCount}');
-  }
-  return names
-      .map(
-        (name) => DeliverableDef(
-          id: _slug(name),
-          name: name,
-          description: '',
-          isMandatory: true,
-          isToggleable: true,
-          hasAlternative: true,
-        ),
-      )
-      .toList();
+
+  return names.map((name) {
+    final isDetailShot = name.startsWith('Detail Shot');
+    return DeliverableDef(
+      id: _slug(name),
+      name: name,
+      description: '',
+      isMandatory: false,
+      isToggleable: !isDetailShot,
+      hasAlternative: false,
+    );
+  }).toList();
 }
 
 String _slug(String name) => name

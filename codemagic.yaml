@@ -1,8 +1,9 @@
 workflows:
   ios-release:
-    name: iOS release
+    name: iOS Unsigned (For Sideloadly)
     instance_type: mac_mini_m2
     max_build_duration: 120
+
     environment:
       flutter: stable
       xcode: latest
