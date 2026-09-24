@@ -52,7 +52,13 @@ const List<MediaTypeConfig> mediaTypeConfigs = [
   MediaTypeConfig(
     type: MediaType.homesPlatinum,
     title: 'Homes Platinum Shoot',
-    subtypes: ['1–2,500 sqft', '2,500–6,000 sqft', '6,000+ sqft'],
+    subtypes: [
+      '0–2,000 sqft',
+      '2,000–4,000 sqft',
+      '4,000–6,000 sqft',
+      '6,000–8,000 sqft',
+      '8,000+ sqft',
+    ],
   ),
   MediaTypeConfig(
     type: MediaType.homesMatterport,

@@ -19,11 +19,12 @@ class UnavailableSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) return const SizedBox.shrink();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.divider),
       ),
@@ -39,9 +40,8 @@ class UnavailableSection extends StatelessWidget {
               'Unavailable Items (${items.length})',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: AppColors.primary,
                 fontSize: 14.5,
-              ),
+              ).copyWith(color: colorScheme.onSurface),
             ),
           ],
         ),
@@ -52,9 +52,8 @@ class UnavailableSection extends StatelessWidget {
                 title: Text(
                   item.name,
                   style: const TextStyle(
-                    color: AppColors.mutedText,
                     decoration: TextDecoration.lineThrough,
-                  ),
+                  ).copyWith(color: colorScheme.onSurfaceVariant),
                 ),
                 trailing: TextButton.icon(
                   onPressed: () => onRestore(item.id),

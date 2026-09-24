@@ -5,6 +5,7 @@ import 'screens/checklist_screen.dart';
 import 'screens/media_types_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'state/checklist_provider.dart';
+import 'state/theme_provider.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -16,18 +17,25 @@ class MediaChecklistApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ChecklistProvider(),
-      child: MaterialApp(
-        title: 'Media Checklist',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.theme,
-        home: WelcomeScreen(
-          onContinue: (context) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const _StartupGate()),
-            );
-          },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ChecklistProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..init()),
+      ],
+      child: Builder(
+        builder: (context) => MaterialApp(
+          title: 'Media Checklist',
+          debugShowCheckedModeBanner: false,
+          theme: context.watch<ThemeProvider>().isDarkMode
+              ? AppTheme.darkTheme
+              : AppTheme.theme,
+          home: WelcomeScreen(
+            onContinue: (context) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const _StartupGate()),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -60,9 +68,8 @@ class _StartupGateState extends State<_StartupGate> {
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
-            backgroundColor: AppColors.background,
             body: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(),
             ),
           );
         }

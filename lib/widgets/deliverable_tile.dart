@@ -24,6 +24,7 @@ class DeliverableTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
@@ -58,8 +59,8 @@ class DeliverableTile extends StatelessWidget {
                                     ? TextDecoration.lineThrough
                                     : null,
                                 color: item.isCompleted
-                                    ? AppColors.mutedText
-                                    : AppColors.primaryText,
+                                    ? colorScheme.onSurfaceVariant
+                                    : colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -87,7 +88,7 @@ class DeliverableTile extends StatelessWidget {
                     tooltip: 'More Info',
                     icon: Icon(
                       item.isExpanded ? Icons.remove_circle : Icons.add_circle,
-                      color: AppColors.primary,
+                      color: colorScheme.primary,
                     ),
                     onPressed: onToggleExpanded,
                   ),
@@ -102,14 +103,16 @@ class DeliverableTile extends StatelessWidget {
           AnimatedSize(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeInOut,
-            child: item.isExpanded ? _buildInfoPanel() : const SizedBox.shrink(),
+            child: item.isExpanded
+                ? _buildInfoPanel(context)
+                : const SizedBox.shrink(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoPanel() {
+  Widget _buildInfoPanel(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -120,7 +123,10 @@ class DeliverableTile extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             item.description,
-            style: const TextStyle(fontSize: 13.5, color: AppColors.mutedText),
+            style: TextStyle(
+              fontSize: 13.5,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -133,18 +139,19 @@ class _MandatoryBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
+        color: colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Text(
+      child: Text(
         'REQUIRED',
         style: TextStyle(
           fontSize: 9.5,
           fontWeight: FontWeight.bold,
-          color: AppColors.primary,
+          color: colorScheme.primary,
           letterSpacing: 0.5,
         ),
       ),

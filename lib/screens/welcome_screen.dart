@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_theme.dart';
-
 class WelcomeScreen extends StatelessWidget {
   final ValueChanged<BuildContext> onContinue;
 
@@ -10,7 +8,6 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -35,6 +32,11 @@ class WelcomeScreen extends StatelessWidget {
                     onPressed: () => onContinue(context),
                     child: const Text('Continue'),
                   ),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Created by Austin Donovan',
+                  style: TextStyle(fontSize: 12),
                 ),
               ],
             ),

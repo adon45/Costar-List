@@ -99,4 +99,74 @@ class AppTheme {
       drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
     );
   }
+
+  static ThemeData get darkTheme {
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF121A21),
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        primary: const Color(0xFF8FB6D8),
+        secondary: AppColors.accent,
+        surface: const Color(0xFF1D2831),
+        brightness: Brightness.dark,
+      ),
+    );
+
+    return base.copyWith(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF0D1720),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
+        surfaceTintColor: Colors.transparent,
+      ),
+      cardTheme: const CardThemeData(
+        color: Color(0xFF1D2831),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.accent),
+      ),
+      textTheme: base.textTheme.apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+      dividerTheme: const DividerThemeData(color: Color(0xFF3B4A55)),
+      drawerTheme: const DrawerThemeData(backgroundColor: Color(0xFF1D2831)),
+      iconTheme: const IconThemeData(color: Color(0xFF8FB6D8)),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.accent
+              : const Color(0xFF1D2831),
+        ),
+        checkColor: const WidgetStatePropertyAll(Colors.white),
+        side: const BorderSide(color: Color(0xFF8FB6D8), width: 1.5),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.accent
+              : Colors.grey.shade500,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.accent.withValues(alpha: 0.5)
+              : Colors.grey.shade700,
+        ),
+      ),
+    );
+  }
 }

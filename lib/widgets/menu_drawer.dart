@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/media_type.dart';
 import '../screens/checklist_screen.dart';
+import '../screens/settings_screen.dart';
 import '../state/checklist_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -22,15 +23,33 @@ class MenuDrawer extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 12, 12),
               color: AppColors.primary,
-              child: const Text(
-                'Switch Assignment',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Switch Assignment',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    tooltip: 'Settings',
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
             for (final config in mediaTypeConfigs)
@@ -45,7 +64,10 @@ class MenuDrawer extends StatelessWidget {
                     children: [
                       for (final sub in config.subtypes)
                         ListTile(
-                          contentPadding: const EdgeInsets.only(left: 32, right: 16),
+                          contentPadding: const EdgeInsets.only(
+                            left: 32,
+                            right: 16,
+                          ),
                           title: Text(sub),
                           selected: provider.mediaType == config.type &&
                               provider.subtype == sub,

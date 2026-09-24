@@ -12,7 +12,7 @@ Future<String?> showSubtypeSelector(
 }) {
   return showModalBottomSheet<String>(
     context: context,
-    backgroundColor: Colors.white,
+    backgroundColor: Theme.of(context).colorScheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -26,17 +26,18 @@ Future<String?> showSubtypeSelector(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
             for (final subtype in subtypes)
               ListTile(
                 title: Text(subtype),
-                trailing: const Icon(Icons.chevron_right, color: AppColors.accent),
+                trailing:
+                    const Icon(Icons.chevron_right, color: AppColors.accent),
                 onTap: () => Navigator.of(context).pop(subtype),
               ),
             const SizedBox(height: 8),

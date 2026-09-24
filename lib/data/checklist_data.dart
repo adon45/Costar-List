@@ -1,5 +1,50 @@
 import '../models/deliverable.dart';
 import '../models/media_type.dart';
+import '../models/room_bucket.dart';
+
+class PhotoRange {
+  final int minimum;
+  final int maximum;
+
+  const PhotoRange(this.minimum, this.maximum);
+
+  int get midpoint => (minimum + maximum) ~/ 2;
+}
+
+const homesPlatinumBucketNames = [
+  'Front Exterior',
+  'Entry',
+  'Living Room',
+  'Dining Room',
+  'Kitchen',
+  'Family Room',
+  'Patio/Deck',
+  'Rear Exterior',
+  'Primary Bedroom',
+  'Primary Bathroom',
+  'Aerial',
+];
+
+List<RoomBucket> createHomesPlatinumBuckets() => homesPlatinumBucketNames
+    .map((name) => RoomBucket(id: _slug(name), name: name))
+    .toList();
+
+PhotoRange homesPlatinumPhotoRange(String? subtype) {
+  switch (subtype) {
+    case '0–2,000 sqft':
+      return const PhotoRange(35, 40);
+    case '2,000–4,000 sqft':
+      return const PhotoRange(45, 50);
+    case '4,000–6,000 sqft':
+      return const PhotoRange(60, 65);
+    case '6,000–8,000 sqft':
+      return const PhotoRange(70, 75);
+    case '8,000+ sqft':
+      return const PhotoRange(75, 80);
+    default:
+      return const PhotoRange(35, 40);
+  }
+}
 
 List<DeliverableDef> getChecklist(MediaType type, String? subtype) {
   switch (type) {
@@ -101,39 +146,7 @@ DeliverableDef _optional(String id, String name, [String description = '']) =>
     );
 
 List<DeliverableDef> _homesPlatinum(String? subtype) {
-  const baseNames = [
-    'Front Exterior',
-    'Rear Exterior',
-    'Patio / Deck',
-    'Aerial',
-    'Entry',
-    'Living Room',
-    'Dining Room',
-    'Family Room',
-    'Kitchen',
-    'Bathroom(s)',
-    'Primary Bedroom',
-    'Primary Bathroom',
-    'Second Bedroom',
-    'Third Bedroom',
-  ];
-  const detailShotCount = 11;
-  final names = <String>[
-    ...baseNames,
-    for (var index = 1; index <= detailShotCount; index++) 'Detail Shot $index',
-  ];
-
-  return names.map((name) {
-    final isDetailShot = name.startsWith('Detail Shot');
-    return DeliverableDef(
-      id: _slug(name),
-      name: name,
-      description: '',
-      isMandatory: false,
-      isToggleable: !isDetailShot,
-      hasAlternative: false,
-    );
-  }).toList();
+  return const [];
 }
 
 String _slug(String name) => name

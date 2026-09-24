@@ -37,12 +37,13 @@ class _MediaTypeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final tile = Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.06),
@@ -63,7 +64,7 @@ class _MediaTypeTile extends StatelessWidget {
             alignment: Alignment.center,
             child: Icon(
               config.comingSoon ? Icons.hourglass_top : Icons.checklist,
-              color: AppColors.primary,
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(width: 14),
@@ -76,7 +77,7 @@ class _MediaTypeTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                  ),
+                  ).copyWith(color: colorScheme.onSurface),
                 ),
                 if (config.comingSoon)
                   const Padding(

@@ -25,57 +25,76 @@ void main() {
     expect(find.text('Media Types'), findsOneWidget);
   });
 
-  test('Homes Platinum lists rooms and 25 flexible shots', () {
-    const subtypes = ['1–2,500 sqft', '2,500–6,000 sqft', '6,000+ sqft'];
-    const roomNames = [
-      'Front Exterior',
-      'Rear Exterior',
-      'Patio / Deck',
-      'Aerial',
-      'Entry',
-      'Living Room',
-      'Dining Room',
-      'Family Room',
-      'Kitchen',
-      'Bathroom(s)',
-      'Primary Bedroom',
-      'Primary Bathroom',
-      'Second Bedroom',
-      'Third Bedroom',
-    ];
-
-    for (final subtype in subtypes) {
-      final checklist = getChecklist(MediaType.homesPlatinum, subtype);
-      expect(checklist, hasLength(25));
-      expect(checklist.map((item) => item.name), containsAll(roomNames));
-      expect(
-        checklist.where((item) => item.name.startsWith('Detail Shot')),
-        hasLength(11),
-      );
-      expect(checklist.where((item) => item.name.startsWith('Alternate')),
-          isEmpty);
-      expect(checklist.every((item) => !item.hasAlternative), isTrue);
-      expect(checklist.every((item) => !item.isMandatory), isTrue);
-    }
+  test('Homes Platinum defines the flexible bucket list and photo ranges', () {
+    expect(createHomesPlatinumBuckets(), hasLength(11));
+    expect(
+      createHomesPlatinumBuckets().map((bucket) => bucket.name),
+      containsAll([
+        'Front Exterior',
+        'Entry',
+        'Living Room',
+        'Dining Room',
+        'Kitchen',
+        'Family Room',
+        'Patio/Deck',
+        'Rear Exterior',
+        'Primary Bedroom',
+        'Primary Bathroom',
+        'Aerial',
+      ]),
+    );
+    expect(homesPlatinumPhotoRange('0–2,000 sqft').minimum, 35);
+    expect(homesPlatinumPhotoRange('8,000+ sqft').maximum, 80);
   });
 
-  test('Homes Platinum replaces unavailable rooms with detail shots', () async {
+  test('Homes Platinum counts photos and creates dynamic bedrooms', () async {
     final provider = ChecklistProvider();
     await provider.loadAssignment(
       MediaType.homesPlatinum,
-      '1–2,500 sqft',
+      '0–2,000 sqft',
     );
 
-    expect(provider.mainList, hasLength(25));
-    provider.toggleAvailability('front_exterior');
+    expect(provider.roomBuckets, hasLength(11));
+    expect(provider.requiredTotal, 37);
+    provider.addPhoto('front_exterior');
+    provider.addPhoto('front_exterior');
+    provider.removePhoto('front_exterior');
+    provider.addBedroom();
+    provider.addBathroom();
 
-    expect(provider.mainList, hasLength(25));
-    expect(provider.unavailableList.map((item) => item.name),
-        contains('Front Exterior'));
-    expect(
-      provider.mainList.where((item) => item.name.startsWith('Detail Shot')),
-      hasLength(12),
+    expect(provider.captured, 1);
+    expect(provider.dynamicBedrooms.single.name, 'Bedroom 1');
+    expect(provider.dynamicBathrooms.single.name, 'Bathroom 1');
+    expect(provider.unavailableList, isEmpty);
+    provider.removeBedroom('additional_bedroom_1');
+    provider.removeBathroom('additional_bathroom_1');
+    expect(provider.dynamicBedrooms, isEmpty);
+    expect(provider.dynamicBathrooms, isEmpty);
+  });
+
+  test('Homes Platinum restores bucket state and dynamic bedrooms', () async {
+    SharedPreferences.setMockInitialValues({});
+    final firstProvider = ChecklistProvider();
+    await firstProvider.init();
+    await firstProvider.loadAssignment(
+      MediaType.homesPlatinum,
+      '4,000–6,000 sqft',
     );
+    firstProvider.addPhoto('kitchen');
+    firstProvider.toggleBucketCompleted('kitchen');
+    firstProvider.toggleBucketExpanded('kitchen');
+    firstProvider.addBedroom();
+    firstProvider.setRequiredTotal(63);
+
+    final restoredProvider = ChecklistProvider();
+    expect(await restoredProvider.init(), isTrue);
+    expect(restoredProvider.captured, 1);
+    expect(restoredProvider.requiredTotal, 63);
+    expect(restoredProvider.dynamicBedrooms.single.name, 'Bedroom 1');
+    final kitchen = restoredProvider.roomBuckets
+        .firstWhere((bucket) => bucket.id == 'kitchen');
+    expect(kitchen.isCompleted, isTrue);
+    expect(kitchen.isExpanded, isTrue);
   });
 
   test('Industrial photo assignments omit loading and garage shots', () {
