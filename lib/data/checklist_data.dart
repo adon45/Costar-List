@@ -22,6 +22,7 @@ const homesPlatinumBucketNames = [
   'Rear Exterior',
   'Primary Bedroom',
   'Primary Bathroom',
+  'Detail Captures',
   'Aerial',
 ];
 

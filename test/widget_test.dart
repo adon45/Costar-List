@@ -26,7 +26,7 @@ void main() {
   });
 
   test('Homes Platinum defines the flexible bucket list and photo ranges', () {
-    expect(createHomesPlatinumBuckets(), hasLength(11));
+    expect(createHomesPlatinumBuckets(), hasLength(12));
     expect(
       createHomesPlatinumBuckets().map((bucket) => bucket.name),
       containsAll([
@@ -40,6 +40,7 @@ void main() {
         'Rear Exterior',
         'Primary Bedroom',
         'Primary Bathroom',
+        'Detail Captures',
         'Aerial',
       ]),
     );
@@ -54,7 +55,7 @@ void main() {
       '0–2,000 sqft',
     );
 
-    expect(provider.roomBuckets, hasLength(11));
+    expect(provider.roomBuckets, hasLength(12));
     expect(provider.requiredTotal, 37);
     provider.addPhoto('front_exterior');
     provider.addPhoto('front_exterior');

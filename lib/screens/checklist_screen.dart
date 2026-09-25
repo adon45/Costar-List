@@ -106,8 +106,13 @@ class ChecklistScreen extends StatelessWidget {
     ChecklistProvider provider,
   ) {
     final buckets = [
-      ...provider.roomBuckets.takeWhile((bucket) => bucket.name != 'Aerial'),
+      ...provider.roomBuckets.where(
+        (bucket) => bucket.name != 'Detail Captures' && bucket.name != 'Aerial',
+      ),
     ];
+    final detailCaptures = provider.roomBuckets.firstWhere(
+      (bucket) => bucket.name == 'Detail Captures',
+    );
     return ListView(
       padding: const EdgeInsets.only(bottom: 12),
       children: [
@@ -142,6 +147,7 @@ class ChecklistScreen extends StatelessWidget {
             onRemove: () => provider.removeBathroom(bucket.id),
           ),
         ),
+        _bucketTile(provider, detailCaptures),
         if (provider.roomBuckets.isNotEmpty)
           _bucketTile(provider, provider.roomBuckets.last),
       ],
