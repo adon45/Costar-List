@@ -117,14 +117,103 @@ void main() {
       mediaTypeConfigs.map((config) => config.title),
       containsAll([
         'Photo Assignments',
-        'Apartments Gold Media Shoot',
-        'Apartments Platinum Media Shoot',
-        'Apartments Diamond Media Shoot',
+        'Apartments',
+        'LoopNet',
         'Homes Platinum Shoot',
-        'Homes Matterport Shoot',
         'Status Verifications',
+        'Ten-X',
       ]),
     );
+    expect(
+      configFor(MediaType.apartments).subtypes,
+      containsAll(['Gold', 'Platinum', 'Diamond', 'Diamond Plus', 'Diamond Spotlight']),
+    );
+    expect(
+      configFor(MediaType.loopNet).subtypes,
+      containsAll(['Gold', 'Platinum', 'Diamond', 'Diamond+', 'Diamond Spotlight']),
+    );
+    expect(configFor(MediaType.loopNet).comingSoon, isTrue);
+    expect(configFor(MediaType.tenX).comingSoon, isTrue);
+  });
+
+  test('apartments checklist includes top delivery tiles and still image options', () {
+    final checklist = getChecklist(MediaType.apartments, 'Diamond Plus');
+    final names = checklist.map((entry) => entry.name).toList();
+
+    expect(names, contains('Matterport Tour'));
+    expect(names, contains('Splat'));
+    expect(names, contains('Video'));
+    expect(names, isNot(contains('Still Images')));
+    expect(names, contains('Amenities'));
+    expect(names, containsAll([
+      'Primary',
+      'Lobby',
+      'Units',
+      'Amenities',
+      'Alternate Community Images',
+      'Building Entrance',
+      'Aerial Context',
+      '90° Lookdown',
+    ]));
+    for (final subtype in ['Diamond', 'Diamond Plus', 'Diamond Spotlight']) {
+      final diamondNames = getChecklist(MediaType.apartments, subtype)
+          .map((entry) => entry.name)
+          .toList();
+      expect(
+        diamondNames.indexOf('Video'),
+        diamondNames.indexOf('Building Entrance') + 1,
+      );
+    }
+  });
+
+  test('loading an apartment subtype populates checklist items', () async {
+    final provider = ChecklistProvider();
+    await provider.loadAssignment(MediaType.apartments, 'Gold');
+
+    expect(provider.mainList, isNotEmpty);
+    expect(provider.mainList.map((item) => item.id), contains('amenities'));
+  });
+
+  test('apartment units and matterport tracking tally into lives counts', () async {
+    final provider = ChecklistProvider();
+    await provider.loadAssignment(MediaType.apartments, 'Platinum');
+
+    expect(provider.apartmentMatterportTarget, 4);
+    expect(provider.apartmentMatterportCaptured, 0);
+    expect(provider.apartmentAmenities, isNotEmpty);
+    provider.setApartmentMatterportTarget(3);
+    expect(provider.apartmentMatterportTarget, 3);
+    expect(provider.apartmentUnits, isNotEmpty);
+
+    provider.addApartmentUnit();
+    expect(provider.apartmentUnits.length, 2);
+    final addedUnit = provider.apartmentUnits.last;
+    expect(provider.canRemoveApartmentUnit(addedUnit.id), isTrue);
+    provider.removeApartmentUnit(addedUnit.id);
+    expect(provider.apartmentUnits, hasLength(1));
+
+    provider.addApartmentUnit();
+    final workedUnit = provider.apartmentUnits.last;
+    final workedRoomId = provider.apartmentUnitRooms[workedUnit.id]!.first.id;
+    provider.addApartmentUnitPhoto(workedRoomId);
+    expect(provider.canRemoveApartmentUnit(workedUnit.id), isFalse);
+    provider.removeApartmentUnit(workedUnit.id);
+    expect(provider.apartmentUnits, hasLength(2));
+
+    provider.addApartmentUnit();
+    final checkedUnit = provider.apartmentUnits.last;
+    final checkedRoomId = provider.apartmentUnitRooms[checkedUnit.id]!.first.id;
+    provider.toggleApartmentUnitCompleted(checkedRoomId);
+    expect(provider.canRemoveApartmentUnit(checkedUnit.id), isFalse);
+    provider.removeApartmentUnit(checkedUnit.id);
+    expect(provider.apartmentUnits, hasLength(3));
+
+    provider.apartmentAmenities.first.photoCount++;
+    expect(provider.captured, 2);
+
+    final roomId = provider.apartmentUnitRooms.values.first.first.id;
+    provider.addApartmentUnitPhoto(roomId);
+    expect(provider.captured, 3);
   });
 
   testWidgets('media types screen lists defined and coming soon assignments',
@@ -140,11 +229,11 @@ void main() {
     );
 
     expect(find.text('Photo Assignments'), findsOneWidget);
-    expect(find.text('Apartments Gold Media Shoot'), findsOneWidget);
-    expect(find.text('Apartments Platinum Media Shoot'), findsOneWidget);
-    expect(find.text('Apartments Diamond Media Shoot'), findsOneWidget);
+    expect(find.text('Apartments'), findsOneWidget);
+    expect(find.text('LoopNet'), findsOneWidget);
     expect(find.text('Homes Platinum Shoot'), findsOneWidget);
-    expect(find.text('Homes Matterport Shoot'), findsOneWidget);
-    expect(find.text('Coming Soon'), findsNWidgets(4));
+    expect(find.text('Status Verifications'), findsOneWidget);
+    expect(find.text('Ten-X'), findsOneWidget);
+    expect(find.text('Coming Soon'), findsNWidgets(2));
   });
 }

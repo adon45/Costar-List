@@ -55,10 +55,10 @@ List<DeliverableDef> getChecklist(MediaType type, String? subtype) {
       return _homesPlatinum(subtype);
     case MediaType.statusVerifications:
       return _statusVerifications(subtype);
-    case MediaType.apartmentsGold:
-    case MediaType.apartmentsPlatinum:
-    case MediaType.apartmentsDiamond:
-    case MediaType.homesMatterport:
+    case MediaType.apartments:
+      return _apartments(subtype);
+    case MediaType.loopNet:
+    case MediaType.tenX:
       return const [];
   }
 }
@@ -148,6 +148,54 @@ DeliverableDef _optional(String id, String name, [String description = '']) =>
 
 List<DeliverableDef> _homesPlatinum(String? subtype) {
   return const [];
+}
+
+List<DeliverableDef> _apartments(String? subtype) {
+  final matterportLimit = switch (subtype) {
+    'Gold' => 2,
+    'Platinum' => 4,
+    'Diamond' || 'Diamond Plus' => 6,
+    'Diamond Spotlight' => 12,
+    _ => 0,
+  };
+  final hasVideo = switch (subtype) {
+    'Diamond' || 'Diamond Plus' || 'Diamond Spotlight' => true,
+    _ => false,
+  };
+  final stillImageTarget = switch (subtype) {
+    'Gold' => 20,
+    'Platinum' => 30,
+    'Diamond' || 'Diamond Plus' => 30,
+    'Diamond Spotlight' => 60,
+    _ => 0,
+  };
+
+  final stillItems = <DeliverableDef>[
+    _required('primary', 'Primary'),
+    _required('lobby', 'Lobby'),
+    _required('units', 'Units',
+        'Kitchen, Dining Room, Living Room, Bedroom, Bathroom, Detail Shots, View'),
+    _required('amenities', 'Amenities',
+        'Fitness Center, Pool, Clubhouse, Other Interior Amenities, Other Exterior Amenities'),
+    _required('alternate_community_images', 'Alternate Community Images'),
+    _required('building_entrance', 'Building Entrance'),
+    if (hasVideo) _required('video', 'Video', '1 video included'),
+    _required('aerial_context', 'Aerial Context'),
+    _required('lookdown', '90° Lookdown'),
+  ];
+
+  final items = <DeliverableDef>[
+    if (matterportLimit > 0)
+      _required(
+        'matterport_tour',
+        'Matterport Tour',
+        'Up to $matterportLimit',
+      ),
+    _required('splat', 'Splat', 'Included in package'),
+    ...stillItems,
+  ];
+
+  return items;
 }
 
 String _slug(String name) => name

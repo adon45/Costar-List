@@ -32,6 +32,12 @@ class ChecklistProvider extends ChangeNotifier {
   List<RoomBucket> roomBuckets = [];
   List<RoomBucket> dynamicBedrooms = [];
   List<RoomBucket> dynamicBathrooms = [];
+  List<RoomBucket> apartmentUnits = [];
+  List<RoomBucket> apartmentMatterports = [];
+  List<RoomBucket> apartmentSplats = [];
+  List<RoomBucket> apartmentAmenities = [];
+  final Map<String, List<RoomBucket>> apartmentUnitRooms = {};
+  int apartmentMatterportTarget = 0;
   int capturedTotal = 0;
   int requiredTotal = 0;
 
@@ -42,10 +48,63 @@ class ChecklistProvider extends ChangeNotifier {
   String? get subtype => _subtype;
 
   bool get isHomesPlatinum => _mediaType == MediaType.homesPlatinum;
+  bool get isApartments => _mediaType == MediaType.apartments;
+
   int get captured => isHomesPlatinum
       ? capturedTotal
-      : mainList.where((d) => d.isCompleted).length;
-  int get totalNeeded => isHomesPlatinum ? requiredTotal : mainList.length;
+      : isApartments
+          ? _apartmentCaptured
+          : mainList.where((d) => d.isCompleted).length;
+  int get totalNeeded => isHomesPlatinum
+      ? requiredTotal
+      : isApartments
+          ? _apartmentRequiredTotal
+          : mainList.length;
+  int get apartmentMatterportTargetLimit => switch (_subtype) {
+        'Gold' => 2,
+        'Platinum' => 4,
+        'Diamond' || 'Diamond Plus' => 6,
+        'Diamond Spotlight' => 12,
+        _ => 0,
+      };
+  int get apartmentSplatTarget => 1;
+  int get apartmentMatterportCaptured =>
+      apartmentMatterports.where((item) => item.isCompleted).length;
+  int get apartmentSplatCaptured =>
+      apartmentSplats.where((item) => item.isCompleted).length;
+  int get _apartmentCaptured {
+    final staticCount = _defs
+        .where((def) =>
+            !{'matterport_tour', 'splat', 'video', 'still_images'}.contains(def.id))
+        .where((def) => _stateFor(def.id).isCompleted)
+        .length;
+    final amenityCount = apartmentAmenities.fold(
+      0,
+      (sum, room) => sum + room.photoCount,
+    );
+    final unitCount = apartmentUnitRooms.values.fold(
+      0,
+      (sum, rooms) => sum +
+          rooms.fold(0, (roomSum, room) => roomSum + room.photoCount),
+    );
+    return staticCount + amenityCount + unitCount;
+  }
+
+  int get _apartmentRequiredTotal {
+    switch (_subtype) {
+      case 'Gold':
+        return 20;
+      case 'Platinum':
+        return 30;
+      case 'Diamond':
+      case 'Diamond Plus':
+        return 30;
+      case 'Diamond Spotlight':
+        return 60;
+      default:
+        return 0;
+    }
+  }
 
   /// Call once at app start. Loads shared preferences and, if a previous
   /// assignment was open, restores it. Returns true if an assignment was
@@ -88,8 +147,44 @@ class ChecklistProvider extends ChangeNotifier {
     roomBuckets = [];
     dynamicBedrooms = [];
     dynamicBathrooms = [];
+    apartmentUnits = [];
+    apartmentMatterports = [];
+    apartmentSplats = [];
+    apartmentAmenities = [];
+    apartmentUnitRooms.clear();
+    apartmentMatterportTarget = 0;
     capturedTotal = 0;
     requiredTotal = 0;
+
+    if (type == MediaType.apartments) {
+      apartmentMatterportTarget = apartmentMatterportTargetLimit;
+      apartmentMatterports = List.generate(
+        apartmentMatterportTarget,
+        (index) => RoomBucket(
+          id: 'apartment_matterport_${index + 1}',
+          name: 'Matterport ${index + 1}',
+        ),
+      );
+      apartmentSplats = [RoomBucket(id: 'apartment_splat', name: 'Splat')];
+      apartmentAmenities = [
+        RoomBucket(id: 'apartment_amenity_fitness_center', name: 'Fitness Center'),
+        RoomBucket(id: 'apartment_amenity_pool', name: 'Pool'),
+        RoomBucket(id: 'apartment_amenity_clubhouse', name: 'Clubhouse'),
+        RoomBucket(
+          id: 'apartment_amenity_other_interior',
+          name: 'Other Interior Amenities',
+        ),
+        RoomBucket(
+          id: 'apartment_amenity_other_exterior',
+          name: 'Other Exterior Amenities',
+        ),
+      ];
+      addApartmentUnit();
+      _rebuildLists();
+      await _rememberLastAssignment();
+      notifyListeners();
+      return;
+    }
 
     if (type == MediaType.homesPlatinum) {
       await _loadHomesPlatinum();
@@ -275,6 +370,165 @@ class ChecklistProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<RoomBucket> _defaultApartmentUnitRooms(String unitId) => [
+        RoomBucket(id: '${unitId}_kitchen', name: 'Kitchen'),
+        RoomBucket(id: '${unitId}_dining_room', name: 'Dining Room'),
+        RoomBucket(id: '${unitId}_living_room', name: 'Living Room'),
+        RoomBucket(id: '${unitId}_bedroom_1', name: 'Bedroom 1'),
+        RoomBucket(id: '${unitId}_bathroom_1', name: 'Bathroom 1'),
+        RoomBucket(id: '${unitId}_detail_shots', name: 'Detail Shots'),
+        RoomBucket(id: '${unitId}_view', name: 'View'),
+      ];
+
+  RoomBucket? _findApartmentRoom(String id) {
+    for (final rooms in apartmentUnitRooms.values) {
+      for (final room in rooms) {
+        if (room.id == id) return room;
+      }
+    }
+    for (final amenity in apartmentAmenities) {
+      if (amenity.id == id) return amenity;
+    }
+    return null;
+  }
+
+  void addApartmentAmenityPhoto(String id) {
+    if (!isApartments) return;
+    final amenity = apartmentAmenities.firstWhere(
+      (item) => item.id == id,
+      orElse: () => RoomBucket(id: id, name: 'Amenity'),
+    );
+    if (apartmentAmenities.every((item) => item.id != id)) return;
+    amenity.photoCount++;
+    notifyListeners();
+  }
+
+  void removeApartmentAmenityPhoto(String id) {
+    if (!isApartments) return;
+    final amenity = apartmentAmenities.firstWhere(
+      (item) => item.id == id,
+      orElse: () => RoomBucket(id: id, name: 'Amenity'),
+    );
+    if (apartmentAmenities.every((item) => item.id != id)) return;
+    if (amenity.photoCount == 0) return;
+    amenity.photoCount--;
+    notifyListeners();
+  }
+
+  void toggleApartmentAmenityCompleted(String id) {
+    if (!isApartments) return;
+    final amenity = apartmentAmenities.firstWhere(
+      (item) => item.id == id,
+      orElse: () => RoomBucket(id: id, name: 'Amenity'),
+    );
+    if (apartmentAmenities.every((item) => item.id != id)) return;
+    amenity.isCompleted = !amenity.isCompleted;
+    notifyListeners();
+  }
+
+  void addApartmentUnit() {
+    if (!isApartments) return;
+    var number = 1;
+    while (apartmentUnits.any((unit) => unit.id == 'apartment_unit_$number')) {
+      number++;
+    }
+    final id = 'apartment_unit_$number';
+    apartmentUnits.add(RoomBucket(id: id, name: 'Unit $number'));
+    apartmentUnitRooms[id] = _defaultApartmentUnitRooms(id);
+    notifyListeners();
+  }
+
+  bool canRemoveApartmentUnit(String id) {
+    final rooms = apartmentUnitRooms[id];
+    return isApartments &&
+        apartmentUnits.any((unit) => unit.id == id) &&
+        rooms != null &&
+        rooms.every((room) => room.photoCount == 0 && !room.isCompleted);
+  }
+
+  void removeApartmentUnit(String id) {
+    if (!canRemoveApartmentUnit(id)) return;
+    apartmentUnits.removeWhere((bucket) => bucket.id == id);
+    apartmentUnitRooms.remove(id);
+    notifyListeners();
+  }
+
+  void addApartmentUnitRoom(String unitId, String roomKind) {
+    if (!isApartments) return;
+    final rooms = apartmentUnitRooms.putIfAbsent(
+      unitId,
+      () => _defaultApartmentUnitRooms(unitId),
+    );
+    final count = rooms.where((room) => room.name.startsWith(roomKind)).length + 1;
+    rooms.add(RoomBucket(id: '${unitId}_${roomKind.toLowerCase()}_$count', name: '$roomKind $count'));
+    notifyListeners();
+  }
+
+  void addApartmentUnitPhoto(String id) {
+    if (!isApartments) return;
+    final room = _findApartmentRoom(id);
+    if (room == null) return;
+    room.photoCount++;
+    notifyListeners();
+  }
+
+  void removeApartmentUnitPhoto(String id) {
+    if (!isApartments) return;
+    final room = _findApartmentRoom(id);
+    if (room == null || room.photoCount == 0) return;
+    room.photoCount--;
+    notifyListeners();
+  }
+
+  void toggleApartmentUnitCompleted(String id) {
+    if (!isApartments) return;
+    final room = _findApartmentRoom(id);
+    if (room == null) return;
+    room.isCompleted = !room.isCompleted;
+    notifyListeners();
+  }
+
+  void toggleApartmentMatterport(int index) {
+    if (!isApartments || index < 0 || index >= apartmentMatterports.length) return;
+    apartmentMatterports[index].isCompleted =
+        !apartmentMatterports[index].isCompleted;
+    notifyListeners();
+  }
+
+  void toggleApartmentSplat() {
+    if (!isApartments || apartmentSplats.isEmpty) return;
+    apartmentSplats.first.isCompleted = !apartmentSplats.first.isCompleted;
+    notifyListeners();
+  }
+
+  void setApartmentMatterportTarget(int value) {
+    if (!isApartments) return;
+    final max = apartmentMatterportTargetLimit;
+    if (value < 0 || value > max) return;
+    apartmentMatterportTarget = value;
+    apartmentMatterports = List.generate(
+      value,
+      (index) => RoomBucket(
+        id: 'apartment_matterport_${index + 1}',
+        name: 'Matterport ${index + 1}',
+        isCompleted: index < apartmentMatterports.length && apartmentMatterports[index].isCompleted,
+      ),
+    );
+    notifyListeners();
+  }
+
+  void setApartmentSplatCount(int value) {
+    if (!isApartments) return;
+    apartmentSplats = [
+      RoomBucket(
+        id: 'apartment_splat',
+        name: 'Splat',
+        isCompleted: value > 0,
+      )
+    ];
+    notifyListeners();
+  }
+
   void _rebuildLists() {
     final main = <DeliverableItem>[];
     final unavailable = <DeliverableItem>[];
@@ -358,6 +612,24 @@ class ChecklistProvider extends ChangeNotifier {
       capturedTotal = 0;
       requiredTotal = homesPlatinumPhotoRange(_subtype).midpoint;
       _persistHomesPlatinum();
+      notifyListeners();
+      return;
+    }
+    if (isApartments) {
+      apartmentUnits = [];
+      apartmentMatterports = List.generate(
+        apartmentMatterportTargetLimit,
+        (index) => RoomBucket(
+          id: 'apartment_matterport_${index + 1}',
+          name: 'Matterport ${index + 1}',
+        ),
+      );
+      apartmentSplats = [RoomBucket(id: 'apartment_splat', name: 'Splat')];
+      apartmentUnitRooms.clear();
+      addApartmentUnit();
+      _states.clear();
+      _rebuildLists();
+      _persist();
       notifyListeners();
       return;
     }

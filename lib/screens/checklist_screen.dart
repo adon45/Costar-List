@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../data/checklist_data.dart';
 import '../models/media_type.dart';
+import '../models/room_bucket.dart';
+import '../theme/app_theme.dart';
 import '../state/checklist_provider.dart';
 import '../widgets/counter_widget.dart';
 import '../widgets/deliverable_tile.dart';
@@ -30,10 +32,41 @@ class ChecklistScreen extends StatelessWidget {
     return Scaffold(
       drawer: const MenuDrawer(),
       appBar: AppBar(
-        title: CounterWidget(
-          captured: provider.captured,
-          totalNeeded: provider.totalNeeded,
-        ),
+        title: provider.isApartments
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CounterWidget(
+                    captured: provider.captured,
+                    totalNeeded: provider.totalNeeded,
+                  ),
+                  const SizedBox(width: 8),
+                  _MetricPill(
+                    label: 'Matterport',
+                    value:
+                        '${provider.apartmentMatterportCaptured}/${provider.apartmentMatterportTarget}',
+                    isComplete: provider.apartmentMatterportTarget > 0 &&
+                        provider.apartmentMatterportCaptured >=
+                            provider.apartmentMatterportTarget,
+                    onTap: () => _showApartmentMatterportPicker(context, provider),
+                  ),
+                  const SizedBox(width: 8),
+                  _MetricPill(
+                    label: 'Splat',
+                    value:
+                        '${provider.apartmentSplatCaptured}/${provider.apartmentSplatTarget}',
+                    isComplete: provider.apartmentSplatCaptured >=
+                        provider.apartmentSplatTarget,
+                    onTap: () => provider.setApartmentSplatCount(
+                      provider.apartmentSplatCaptured >= 1 ? 0 : 1,
+                    ),
+                  ),
+                ],
+              )
+            : CounterWidget(
+                captured: provider.captured,
+                totalNeeded: provider.totalNeeded,
+              ),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -67,7 +100,9 @@ class ChecklistScreen extends StatelessWidget {
           Expanded(
             child: provider.isHomesPlatinum
                 ? _buildHomesBuckets(context, provider)
-                : _buildLegacyChecklist(provider),
+                : provider.isApartments
+                    ? _buildApartmentsChecklist(provider)
+                    : _buildLegacyChecklist(provider),
           ),
         ],
       ),
@@ -99,6 +134,229 @@ class ChecklistScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildApartmentsChecklist(ChecklistProvider provider) {
+    final stillItems = provider.mainList
+        .where((item) =>
+            item.id != 'matterport_tour' &&
+          item.id != 'splat')
+        .toList();
+
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 12),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ...provider.apartmentMatterports.asMap().entries.map((entry) {
+                final index = entry.key;
+                final matterport = entry.value;
+                return ChoiceChip(
+                  label: Text('Matterport ${index + 1}'),
+                  selected: matterport.isCompleted,
+                  selectedColor: AppColors.accent,
+                  checkmarkColor: Colors.white,
+                  backgroundColor: Colors.grey.shade100,
+                  onSelected: (_) => provider.toggleApartmentMatterport(index),
+                );
+              }),
+              if (provider.apartmentSplats.isNotEmpty)
+                ChoiceChip(
+                  label: const Text('Splat'),
+                  selected: provider.apartmentSplats.first.isCompleted,
+                  selectedColor: AppColors.accent,
+                  checkmarkColor: Colors.white,
+                  backgroundColor: Colors.grey.shade100,
+                  onSelected: (_) => provider.toggleApartmentSplat(),
+                ),
+            ],
+          ),
+        ),
+        ...stillItems.map((item) {
+          if (item.id == 'units') {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Card(
+                child: ExpansionTile(
+                  title: Text(
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  initiallyExpanded: item.isExpanded,
+                  onExpansionChanged: (_) => provider.toggleExpanded(item.id),
+                  children: [
+                    ...provider.apartmentUnits.expand((unit) {
+                      final rooms = provider.apartmentUnitRooms[unit.id] ?? const <RoomBucket>[];
+                      final standardRooms = rooms
+                          .where((room) =>
+                              room.name != 'Detail Shots' && room.name != 'View')
+                          .toList();
+                      final trailingRooms = rooms
+                          .where((room) =>
+                              room.name == 'Detail Shots' || room.name == 'View')
+                          .toList();
+
+                      return [
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                          child: Card(
+                            child: ExpansionTile(
+                              title: Text(
+                                unit.name,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              children: [
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton.icon(
+                                    onPressed: provider.canRemoveApartmentUnit(unit.id)
+                                        ? () => provider.removeApartmentUnit(unit.id)
+                                        : null,
+                                    icon: const Icon(Icons.delete_outline),
+                                    label: const Text('Remove Unit'),
+                                  ),
+                                ),
+                                ...standardRooms.map(
+                                  (room) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    child: RoomBucketTile(
+                                      bucket: room,
+                                      onAddPhoto: () => provider.addApartmentUnitPhoto(room.id),
+                                      onRemovePhoto: () => provider.removeApartmentUnitPhoto(room.id),
+                                      onToggleCompleted: () => provider.toggleApartmentUnitCompleted(room.id),
+                                    ),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: () => provider.addApartmentUnitRoom(unit.id, 'Bedroom'),
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Add Bedroom'),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () => provider.addApartmentUnitRoom(unit.id, 'Bathroom'),
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Add Bathroom'),
+                                    ),
+                                  ],
+                                ),
+                                ...trailingRooms.map(
+                                  (room) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    child: RoomBucketTile(
+                                      bucket: room,
+                                      onAddPhoto: () => provider.addApartmentUnitPhoto(room.id),
+                                      onRemovePhoto: () => provider.removeApartmentUnitPhoto(room.id),
+                                      onToggleCompleted: () => provider.toggleApartmentUnitCompleted(room.id),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ];
+                    }),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: provider.addApartmentUnit,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Unit'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (item.id == 'amenities') {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Card(
+                child: ExpansionTile(
+                  title: Text(
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  initiallyExpanded: item.isExpanded,
+                  onExpansionChanged: (_) => provider.toggleExpanded(item.id),
+                  children: [
+                    for (final amenity in provider.apartmentAmenities)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        child: RoomBucketTile(
+                          bucket: amenity,
+                          onAddPhoto: () => provider.addApartmentAmenityPhoto(amenity.id),
+                          onRemovePhoto: () => provider.removeApartmentAmenityPhoto(amenity.id),
+                          onToggleCompleted: () => provider.toggleApartmentAmenityCompleted(amenity.id),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: DeliverableTile(
+              item: item,
+              onToggleCompleted: () => provider.toggleCompletion(item.id),
+              onToggleExpanded: () => provider.toggleExpanded(item.id),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  static int _apartmentMatterportLimit(String? subtype) {
+    switch (subtype) {
+      case 'Gold':
+        return 2;
+      case 'Platinum':
+        return 4;
+      case 'Diamond':
+      case 'Diamond Plus':
+        return 6;
+      case 'Diamond Spotlight':
+        return 12;
+      default:
+        return 0;
+    }
+  }
+
+  static bool _apartmentHasVideo(String? subtype) {
+    return switch (subtype) {
+      'Diamond' || 'Diamond Plus' || 'Diamond Spotlight' => true,
+      _ => false,
+    };
+  }
+
+  static int _apartmentStillImageTarget(String? subtype) {
+    return switch (subtype) {
+      'Gold' => 20,
+      'Platinum' => 30,
+      'Diamond' || 'Diamond Plus' => 30,
+      'Diamond Spotlight' => 60,
+      _ => 0,
+    };
   }
 
   Widget _buildHomesBuckets(
@@ -210,6 +468,48 @@ class ChecklistScreen extends StatelessWidget {
     if (selected != null) provider.setRequiredTotal(selected);
   }
 
+  Future<void> _showApartmentMatterportPicker(
+    BuildContext context,
+    ChecklistProvider provider,
+  ) async {
+    final max = provider.apartmentMatterportTargetLimit;
+    var target = provider.apartmentMatterportTarget;
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Matterport target'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('$target / $max'),
+              Slider(
+                value: target.toDouble(),
+                min: 0,
+                max: max.toDouble(),
+                divisions: max == 0 ? 1 : max,
+                label: '$target',
+                onChanged: (value) => setState(() => target = value.round()),
+              ),
+              Text('Allowed range: 0–$max'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(target),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (selected != null) provider.setApartmentMatterportTarget(selected);
+  }
+
   Future<void> _confirmReset(
     BuildContext context,
     ChecklistProvider provider,
@@ -237,5 +537,85 @@ class ChecklistScreen extends StatelessWidget {
     if (confirmed == true) {
       provider.resetAssignment();
     }
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MetricTile({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 142,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricPill extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool isComplete;
+  final VoidCallback onTap;
+
+  const _MetricPill({
+    required this.label,
+    required this.value,
+    this.isComplete = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isComplete ? AppColors.accent : Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          '$label $value',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12.5,
+          ),
+        ),
+      ),
+    );
   }
 }

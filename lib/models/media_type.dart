@@ -1,12 +1,11 @@
 /// The top-level assignment categories shown on the Media Types screen.
 enum MediaType {
   photoAssignments,
-  apartmentsGold,
-  apartmentsPlatinum,
-  apartmentsDiamond,
+  apartments,
+  loopNet,
   homesPlatinum,
-  homesMatterport,
   statusVerifications,
+  tenX,
 }
 
 /// Static configuration describing how a [MediaType] should be presented
@@ -35,19 +34,15 @@ const List<MediaTypeConfig> mediaTypeConfigs = [
     subtypes: ['Industrial', 'Office', 'Retail', 'Multifamily'],
   ),
   MediaTypeConfig(
-    type: MediaType.apartmentsGold,
-    title: 'Apartments Gold Media Shoot',
-    comingSoon: true,
+    type: MediaType.apartments,
+    title: 'Apartments',
+    subtypes: ['Gold', 'Platinum', 'Diamond', 'Diamond Plus', 'Diamond Spotlight'],
   ),
   MediaTypeConfig(
-    type: MediaType.apartmentsPlatinum,
-    title: 'Apartments Platinum Media Shoot',
+    type: MediaType.loopNet,
+    title: 'LoopNet',
     comingSoon: true,
-  ),
-  MediaTypeConfig(
-    type: MediaType.apartmentsDiamond,
-    title: 'Apartments Diamond Media Shoot',
-    comingSoon: true,
+    subtypes: ['Gold', 'Platinum', 'Diamond', 'Diamond+', 'Diamond Spotlight'],
   ),
   MediaTypeConfig(
     type: MediaType.homesPlatinum,
@@ -61,14 +56,14 @@ const List<MediaTypeConfig> mediaTypeConfigs = [
     ],
   ),
   MediaTypeConfig(
-    type: MediaType.homesMatterport,
-    title: 'Homes Matterport Shoot',
-    comingSoon: true,
-  ),
-  MediaTypeConfig(
     type: MediaType.statusVerifications,
     title: 'Status Verifications',
     subtypes: ['Proposed', 'Final Planning', 'Under Construction', 'Existing'],
+  ),
+  MediaTypeConfig(
+    type: MediaType.tenX,
+    title: 'Ten-X',
+    comingSoon: true,
   ),
 ];
 
